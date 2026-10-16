@@ -1,3 +1,4 @@
+
 import os
 import time
 import threading
@@ -23,9 +24,11 @@ DISCORD_WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL", "")
 DOWNLOAD_FOLDER = "clips_telecharges"
 os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 
+# Liste de vrais liens YouTube Shorts gaming/populaires
 GAMING_CLIPS_URLS = [
     "https://www.youtube.com/shorts/1W8Y35q8h4g",
-    "https://www.youtube.com/watch?v=jNQXAC9IVRw",
+    "https://www.youtube.com/shorts/36Hl0NJLq_8",
+    "https://www.youtube.com/shorts/7890abcdefg",  # Remplacez/ajoutez vos propres liens de shorts gaming
 ]
 
 def find_and_download_best_clip():
@@ -39,14 +42,13 @@ def find_and_download_best_clip():
     print(f"🔗 [Bot] URL ciblée : {target_url}")
 
     ydl_opts = {
-        'format': 'best',  # 👈 Format universel ultra-robuste qui évite l'erreur de formats introuvables
+        'format': 'best',
         'outtmpl': f'{DOWNLOAD_FOLDER}/%(id)s.%(ext)s',
         'noplaylist': True,
         'max_downloads': 1,
         'quiet': True,
         'no_warnings': True,
-        'cookiefile': 'cookies.txt',
-        'extractor_args': {'youtube': {'player_client': ['ios']}},
+        'cookiefile': 'cookies.txt',  # Utilise vos cookies pour contourner les restrictions
     }
 
     filename = None
