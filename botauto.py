@@ -8,7 +8,7 @@ import yt_dlp
 import schedule
 from flask import Flask
 
-# --- 1. SERVEUR WEB FLASK (Pour garder Render éveillé) ---
+# --- 1. SERVEUR WEB FLASK ---
 app = Flask(__name__)
 
 @app.route('/')
@@ -24,46 +24,53 @@ DISCORD_WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL", "")
 DOWNLOAD_FOLDER = "clips_telecharges"
 os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 
-# Liste de vrais liens YouTube Shorts gaming/populaires
-GAMING_CLIPS_URLS = [
-    "https://www.youtube.com/shorts/1W8Y35q8h4g",
-    "https://www.youtube.com/shorts/36Hl0NJLq_8",
-    "https://www.youtube.com/shorts/7890abcdefg",  # Remplacez/ajoutez vos propres liens de shorts gaming
+# Liste de chaînes YouTube axées sur les clips gaming (le bot ira chercher la toute dernière vidéo de l'une d'elles au hasard)
+GAMING_CHANNELS = [
+    "https://www.youtube.com/@TwitchMoments/shorts",
+    "https://www.youtube.com/@StreamerReplays/shorts",
+    # Ajoutez d'autres chaînes de clips ici
 ]
 
 def find_and_download_best_clip():
-    print("\n🔍 [Bot] Sélection d'un clip gaming dans la liste...")
+    print("\n🔍 [Bot] Analyse et recherche dynamique du meilleur contenu récent...")
     
     if not DISCORD_WEBHOOK_URL or "discord.com/api/webhooks" not in DISCORD_WEBHOOK_URL:
         print("❌ [Bot] ERREUR : La variable DISCORD_WEBHOOK_URL est absente ou invalide sur Render !")
         return
 
-    target_url = random.choice(GAMING_CLIPS_URLS)
-    print(f"🔗 [Bot] URL ciblée : {target_url}")
+    # Sélection aléatoire d'une chaîne source
+    target_channel = random.choice(GAMING_CHANNELS)
+    print(f"📡 [Bot] Exploration de la source : {target_channel}")
 
     ydl_opts = {
         'format': 'best',
         'outtmpl': f'{DOWNLOAD_FOLDER}/%(id)s.%(ext)s',
-        'noplaylist': True,
-        'max_downloads': 1,
+        'playlistend': 1,      # Prend uniquement la toute dernière vidéo/short publiée
+        'extract_flat': False,
         'quiet': True,
         'no_warnings': True,
-        'cookiefile': 'cookies.txt',  # Utilise vos cookies pour contourner les restrictions
+        'cookiefile': 'cookies.txt',
     }
 
     filename = None
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(target_url, download=True)
+            # Extrait les infos de la chaîne et récupère la dernière vidéo
+            info = ydl.extract_info(target_channel, download=True)
+            
+            # Si c'est une liste de lecture/chaîne, on prend le premier élément (le plus récent)
+            if 'entries' in info:
+                info = info['entries'][0]
+
             filename = ydl.prepare_filename(info)
             title = info.get('title', 'Clip Gaming')
-            webpage_url = info.get('webpage_url', target_url)
+            webpage_url = info.get('webpage_url', target_channel)
 
-        print(f"✅ [Bot] Clip téléchargé avec succès : {title}")
+        print(f"✅ [Bot] Nouveau contenu viral détecté et téléchargé : {title}")
         send_video_to_discord(filename, title, webpage_url)
 
     except Exception as e:
-        print(f"❌ [Bot] Erreur lors du téléchargement : {e}")
+        print(f"❌ [Bot] Erreur lors de l'extraction dynamique : {e}")
 
 def send_video_to_discord(file_path, title, video_url):
     if not file_path or not os.path.exists(file_path):
@@ -104,7 +111,7 @@ def send_video_to_discord(file_path, title, video_url):
                 print(f"⚠️ [Bot] Impossible de supprimer le fichier temporaire : {e}")
 
 def run_scheduler():
-    print("🚀 [Bot] Démarrage du planificateur de tâches...")
+    print("🚀 [Bot] Démarrage du planificateur de tâches autonomes...")
     find_and_download_best_clip()
     schedule.every(6).hours.do(find_and_download_best_clip)
 
