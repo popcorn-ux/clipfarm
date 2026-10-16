@@ -45,7 +45,8 @@ def find_and_download_best_clip():
         'max_downloads': 1,
         'quiet': True,
         'no_warnings': True,
-        'cookiefile': 'cookies.txt',  # 👈 Utilise vos cookies pour authentifier le bot et contourner le blocage
+        'cookiefile': 'cookies.txt',  # Utilise vos cookies
+        'extractor_args': {'youtube': {'player_client': ['ios']}},  # Associe le client iOS pour valider la session
     }
 
     filename = None
