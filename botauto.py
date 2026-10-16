@@ -1,4 +1,3 @@
-
 import os
 import time
 import threading
@@ -40,7 +39,7 @@ def find_and_download_best_clip():
         'max_downloads': 1,
         'quiet': True,
         'no_warnings': True,
-        'extractor_args': {'youtube': {'player_client': ['android']}},  # 👈 Contourne le blocage anti-bot de YouTube
+        'extractor_args': {'youtube': {'player_client': ['ios']}},  # 👈 Contourne le blocage via le client iOS
     }
 
     filename = None
@@ -122,3 +121,4 @@ if __name__ == "__main__":
 
     # Lancement du serveur Web Flask
     run_web()
+       
