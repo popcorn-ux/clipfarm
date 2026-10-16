@@ -1,6 +1,8 @@
+
 import os
 import time
 import threading
+import random
 import requests
 import yt_dlp
 import schedule
@@ -22,42 +24,47 @@ DISCORD_WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL", "")
 DOWNLOAD_FOLDER = "clips_telecharges"
 os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 
+# Liste de clips gaming (Shorts / Clips) pour contourner le blocage de recherche YouTube
+GAMING_CLIPS_URLS = [
+    "https://www.youtube.com/shorts/1W8Y35q8h4g",
+    "https://www.youtube.com/shorts/dQw4w9WgXcQ", # Remplacer ou ajouter vos propres liens de clips gaming
+    "https://www.youtube.com/shorts/jNQXAC9IVRw",
+]
+
 def find_and_download_best_clip():
-    print("\n🔍 [Bot] Recherche d'un clip gaming populaire...")
+    print("\n🔍 [Bot] Sélection d'un clip gaming dans la liste...")
     
     # Vérification préalable de l'URL du Webhook
     if not DISCORD_WEBHOOK_URL or "discord.com/api/webhooks" not in DISCORD_WEBHOOK_URL:
         print("❌ [Bot] ERREUR : La variable DISCORD_WEBHOOK_URL est absente ou invalide sur Render !")
         return
 
-    search_query = "ytsearch1:twitch gaming funny moments short"
+    # Sélection aléatoire d'un lien direct pour éviter le blocage de recherche
+    target_url = random.choice(GAMING_CLIPS_URLS)
+    print(fmt_url := f"🔗 [Bot] URL ciblée : {target_url}")
 
     ydl_opts = {
         'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
         'outtmpl': f'{DOWNLOAD_FOLDER}/%(id)s.%(ext)s',
         'noplaylist': True,
-        'max_downloads': 1,
         'quiet': True,
         'no_warnings': True,
-        'extractor_args': {'youtube': {'player_client': ['ios']}},  # 👈 Contourne le blocage via le client iOS
+        'extractor_args': {'youtube': {'player_client': ['ios']}},
     }
 
     filename = None
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(search_query, download=True)
-            if 'entries' in info:
-                info = info['entries'][0]
-
+            info = ydl.extract_info(target_url, download=True)
             filename = ydl.prepare_filename(info)
             title = info.get('title', 'Clip Gaming')
-            webpage_url = info.get('webpage_url', '')
+            webpage_url = info.get('webpage_url', target_url)
 
         print(f"✅ [Bot] Clip téléchargé avec succès : {title}")
         send_video_to_discord(filename, title, webpage_url)
 
     except Exception as e:
-        print(f"❌ [Bot] Erreur lors du scraping/téléchargement : {e}")
+        print(f"❌ [Bot] Erreur lors du téléchargement : {e}")
 
 def send_video_to_discord(file_path, title, video_url):
     if not file_path or not os.path.exists(file_path):
@@ -72,14 +79,12 @@ def send_video_to_discord(file_path, title, video_url):
     }
 
     try:
-        # Si le fichier est sous la limite Discord (25 Mo), on l'envoie directement en pièce jointe
         if file_size_mb < 24.5:
             print("📤 [Bot] Envoi de la vidéo sur Discord...")
             with open(file_path, 'rb') as f:
                 files = {'file': (os.path.basename(file_path), f, 'video/mp4')}
                 response = requests.post(DISCORD_WEBHOOK_URL, data=payload, files=files, timeout=60)
         else:
-            # Sinon, on envoie le lien seul pour éviter le rejet Discord
             print("⚠️ [Bot] Fichier trop lourd pour Discord (> 25MB). Envoi du lien uniquement...")
             response = requests.post(DISCORD_WEBHOOK_URL, json=payload, timeout=30)
 
@@ -92,7 +97,6 @@ def send_video_to_discord(file_path, title, video_url):
         print(f"❌ [Bot] Erreur lors de la requête Discord : {e}")
 
     finally:
-        # Nettoyage systématique du fichier local
         if os.path.exists(file_path):
             try:
                 os.remove(file_path)
@@ -102,11 +106,7 @@ def send_video_to_discord(file_path, title, video_url):
 
 def run_scheduler():
     print("🚀 [Bot] Démarrage du planificateur de tâches...")
-
-    # 1. Exécution immédiate au lancement
     find_and_download_best_clip()
-
-    # 2. Exécution automatique toutes les 6 heures (Ajustable selon vos envies)
     schedule.every(6).hours.do(find_and_download_best_clip)
 
     while True:
@@ -114,11 +114,7 @@ def run_scheduler():
         time.sleep(1)
 
 if __name__ == "__main__":
-    # Lancement du planificateur dans un Thread dédié
     scheduler_thread = threading.Thread(target=run_scheduler)
     scheduler_thread.daemon = True
     scheduler_thread.start()
-
-    # Lancement du serveur Web Flask
     run_web()
-       
