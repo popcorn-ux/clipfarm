@@ -1,4 +1,3 @@
-
 import os
 import time
 import threading
@@ -24,32 +23,29 @@ DISCORD_WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL", "")
 DOWNLOAD_FOLDER = "clips_telecharges"
 os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 
-# Liste de clips gaming (Shorts / Clips) pour contourner le blocage de recherche YouTube
 GAMING_CLIPS_URLS = [
     "https://www.youtube.com/shorts/1W8Y35q8h4g",
-    "https://www.youtube.com/shorts/dQw4w9WgXcQ", # Remplacer ou ajouter vos propres liens de clips gaming
     "https://www.youtube.com/shorts/jNQXAC9IVRw",
 ]
 
 def find_and_download_best_clip():
     print("\n🔍 [Bot] Sélection d'un clip gaming dans la liste...")
     
-    # Vérification préalable de l'URL du Webhook
     if not DISCORD_WEBHOOK_URL or "discord.com/api/webhooks" not in DISCORD_WEBHOOK_URL:
         print("❌ [Bot] ERREUR : La variable DISCORD_WEBHOOK_URL est absente ou invalide sur Render !")
         return
 
-    # Sélection aléatoire d'un lien direct pour éviter le blocage de recherche
     target_url = random.choice(GAMING_CLIPS_URLS)
-    print(fmt_url := f"🔗 [Bot] URL ciblée : {target_url}")
+    print(f"🔗 [Bot] URL ciblée : {target_url}")
 
     ydl_opts = {
         'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
         'outtmpl': f'{DOWNLOAD_FOLDER}/%(id)s.%(ext)s',
         'noplaylist': True,
+        'max_downloads': 1,
         'quiet': True,
         'no_warnings': True,
-        'extractor_args': {'youtube': {'player_client': ['ios']}},
+        'cookiefile': 'cookies.txt',  # 👈 Utilise vos cookies pour authentifier le bot et contourner le blocage
     }
 
     filename = None
