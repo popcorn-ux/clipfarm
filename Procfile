@@ -1,1 +1,1 @@
-web: python bot_autonome.py
+web: python botauto.py
