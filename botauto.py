@@ -1,4 +1,3 @@
-
 import os
 import time
 import threading
@@ -48,8 +47,7 @@ def find_and_download_best_clip():
         'extract_flat': False,
         'quiet': True,
         'no_warnings': True,
-        'cookiefile': 'cookies.txt',                                # Utilise vos cookies
-        'extractor_args': {'youtube': {'player_client': ['ios']}}, # Simule le client iOS pour valider le téléchargement
+        'cookiefile': 'cookies.txt',  # Utilise vos cookies web en toute harmonie
     }
 
     filename = None
