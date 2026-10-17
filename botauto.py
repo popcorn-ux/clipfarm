@@ -8,7 +8,7 @@ import yt_dlp
 import schedule
 from flask import Flask
 
-# --- 1. SERVEUR WEB FLASK ---
+# --- 1. SERVEUR WEB FLASK (Pour garder Render éveillé) ---
 app = Flask(__name__)
 
 @app.route('/')
@@ -24,11 +24,11 @@ DISCORD_WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL", "")
 DOWNLOAD_FOLDER = "clips_telecharges"
 os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 
-# Liste de chaînes YouTube axées sur les clips gaming (le bot ira chercher la toute dernière vidéo de l'une d'elles au hasard)
+# Liste de chaînes gaming actives et vérifiées pour la récupération dynamique
 GAMING_CHANNELS = [
-    "https://www.youtube.com/@TwitchMoments/shorts",
-    "https://www.youtube.com/@StreamerReplays/shorts",
-    # Ajoutez d'autres chaînes de clips ici
+    "https://www.youtube.com/@SypherPK/shorts",
+    "https://www.youtube.com/@LazarBeam/shorts",
+    "https://www.youtube.com/@PrestonShorts/shorts",
 ]
 
 def find_and_download_best_clip():
@@ -38,7 +38,6 @@ def find_and_download_best_clip():
         print("❌ [Bot] ERREUR : La variable DISCORD_WEBHOOK_URL est absente ou invalide sur Render !")
         return
 
-    # Sélection aléatoire d'une chaîne source
     target_channel = random.choice(GAMING_CHANNELS)
     print(f"📡 [Bot] Exploration de la source : {target_channel}")
 
@@ -49,16 +48,13 @@ def find_and_download_best_clip():
         'extract_flat': False,
         'quiet': True,
         'no_warnings': True,
-        'cookiefile': 'cookies.txt',
+        'cookiefile': 'cookies.txt',  # Authentification via vos cookies
     }
 
     filename = None
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            # Extrait les infos de la chaîne et récupère la dernière vidéo
             info = ydl.extract_info(target_channel, download=True)
-            
-            # Si c'est une liste de lecture/chaîne, on prend le premier élément (le plus récent)
             if 'entries' in info:
                 info = info['entries'][0]
 
