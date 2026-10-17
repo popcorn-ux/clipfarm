@@ -7,7 +7,7 @@ import yt_dlp
 import schedule
 from flask import Flask
 
-# --- 1. SERVEUR WEB FLASK (Pour garder Render éveillé) ---
+# --- 1. SERVEUR WEB FLASK ---
 app = Flask(__name__)
 
 @app.route('/')
@@ -23,7 +23,6 @@ DISCORD_WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL", "")
 DOWNLOAD_FOLDER = "clips_telecharges"
 os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 
-# Liste de chaînes gaming actives pour la récupération dynamique
 GAMING_CHANNELS = [
     "https://www.youtube.com/@PrestonShorts/shorts",
     "https://www.youtube.com/@SypherPK/shorts",
@@ -43,11 +42,17 @@ def find_and_download_best_clip():
     ydl_opts = {
         'format': 'best',
         'outtmpl': f'{DOWNLOAD_FOLDER}/%(id)s.%(ext)s',
-        'playlistend': 1,      # Prend uniquement la toute dernière vidéo/short publiée
+        'playlistend': 1,
         'extract_flat': False,
         'quiet': True,
         'no_warnings': True,
-        'cookiefile': 'cookies.txt',  # Utilise vos cookies web en toute harmonie
+        'cookiefile': 'cookies.txt',
+        # Emulation complète d'un navigateur de bureau pour valider les cookies
+        'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'http_headers': {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept-Language': 'en-US,en;q=0.9',
+        },
     }
 
     filename = None
