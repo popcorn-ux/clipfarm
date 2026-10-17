@@ -24,11 +24,11 @@ DISCORD_WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL", "")
 DOWNLOAD_FOLDER = "clips_telecharges"
 os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 
-# Liste de chaînes gaming actives et vérifiées pour la récupération dynamique
+# Liste de chaînes gaming actives pour la récupération dynamique
 GAMING_CHANNELS = [
+    "https://www.youtube.com/@PrestonShorts/shorts",
     "https://www.youtube.com/@SypherPK/shorts",
     "https://www.youtube.com/@LazarBeam/shorts",
-    "https://www.youtube.com/@PrestonShorts/shorts",
 ]
 
 def find_and_download_best_clip():
@@ -48,7 +48,8 @@ def find_and_download_best_clip():
         'extract_flat': False,
         'quiet': True,
         'no_warnings': True,
-        'cookiefile': 'cookies.txt',  # Authentification via vos cookies
+        'cookiefile': 'cookies.txt',                                # Utilise vos cookies
+        'extractor_args': {'youtube': {'player_client': ['ios']}}, # Simule le client iOS pour valider le téléchargement
     }
 
     filename = None
